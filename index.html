@@ -6,7 +6,7 @@
     <title>Погрузка — калькулятор норм</title>
     <meta
       name="description"
-      content="Калькулятор норм погрузки труб и фасонки в фуру"
+      content="Совместный калькулятор норм погрузки труб и фасонки в фуру"
     />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -21,103 +21,126 @@
 
     <header class="site-header">
       <p class="brand">Погрузка</p>
-      <p class="tagline">Нормы загрузки фуры для труб и фасонки</p>
+      <p class="tagline">Совместный расчёт труб и фасонки в одной фуре</p>
     </header>
 
     <main class="calculator">
-      <div class="mode-switch" role="tablist" aria-label="Тип изделий">
-        <button
-          type="button"
-          class="mode-btn is-active"
-          role="tab"
-          aria-selected="true"
-          data-mode="pipes"
-        >
-          Трубы
-        </button>
-        <button
-          type="button"
-          class="mode-btn"
-          role="tab"
-          aria-selected="false"
-          data-mode="fas"
-        >
-          Фасонка
-        </button>
-      </div>
-
       <form id="calc-form" class="calc-form" novalidate>
-        <section class="fields" id="pipe-fields">
-          <label class="field">
-            <span>Диаметр оболочки, мм</span>
-            <select id="pipe-diameter" name="pipe-diameter"></select>
-          </label>
-          <label class="field">
-            <span>Длина трубы</span>
-            <select id="pipe-length" name="pipe-length">
-              <option value="1.8">1,8 м</option>
-              <option value="2" selected>2 м</option>
-              <option value="2.2">2,2 м</option>
-            </select>
-          </label>
+        <section class="block">
+          <h2 class="block-title">Трубы</h2>
+          <div class="fields fields-3">
+            <label class="field">
+              <span>Диаметр оболочки, мм</span>
+              <select id="pipe-diameter" name="pipe-diameter"></select>
+            </label>
+            <label class="field">
+              <span>Длина трубы</span>
+              <select id="pipe-length" name="pipe-length">
+                <option value="1.8">1,8 м</option>
+                <option value="2" selected>2 м</option>
+                <option value="2.2">2,2 м</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Количество, шт</span>
+              <input
+                id="pipe-qty"
+                name="pipe-qty"
+                type="number"
+                min="0"
+                step="1"
+                value="0"
+                inputmode="numeric"
+              />
+            </label>
+          </div>
+          <p class="block-norm" id="pipe-norm-line">Норма: —</p>
         </section>
 
-        <section class="fields is-hidden" id="fas-fields" hidden>
+        <section class="block">
+          <h2 class="block-title">Фасонка</h2>
           <label class="field">
             <span>Диаметр трубы / оболочки</span>
             <select id="fas-size" name="fas-size"></select>
           </label>
-          <label class="field">
-            <span>Тип изделия</span>
-            <select id="fas-type" name="fas-type">
-              <option value="bends">Отводы укор. ПЭ, ОЦ</option>
-              <option value="nop">НОП (L = 1500 мм)</option>
-              <option value="end">Концевой элемент (L = 2200 мм)</option>
-            </select>
-          </label>
+          <div class="fields fields-3">
+            <label class="field">
+              <span>Отводы, шт</span>
+              <input
+                id="fas-bends-qty"
+                name="fas-bends-qty"
+                type="number"
+                min="0"
+                step="1"
+                value="0"
+                inputmode="numeric"
+              />
+            </label>
+            <label class="field">
+              <span>НОП, шт</span>
+              <input
+                id="fas-nop-qty"
+                name="fas-nop-qty"
+                type="number"
+                min="0"
+                step="1"
+                value="0"
+                inputmode="numeric"
+              />
+            </label>
+            <label class="field">
+              <span>Концевой, шт</span>
+              <input
+                id="fas-end-qty"
+                name="fas-end-qty"
+                type="number"
+                min="0"
+                step="1"
+                value="0"
+                inputmode="numeric"
+              />
+            </label>
+          </div>
+          <p class="block-norm" id="fas-norm-line">Нормы: —</p>
         </section>
-
-        <label class="field field-qty">
-          <span>Количество к отгрузке, шт</span>
-          <input
-            id="quantity"
-            name="quantity"
-            type="number"
-            min="1"
-            step="1"
-            placeholder="Необязательно"
-            inputmode="numeric"
-          />
-        </label>
       </form>
 
       <section class="result" id="result" aria-live="polite">
-        <p class="result-label" id="result-label">Норма погрузки</p>
-        <p class="result-value" id="result-norm">—</p>
-        <p class="result-unit" id="result-unit">шт</p>
-        <div class="result-meta" id="result-meta"></div>
+        <p class="result-label">Нужно фур</p>
+        <p class="result-value" id="result-trucks-count">0</p>
+        <p class="result-unit" id="result-unit">совместная погрузка</p>
+        <div class="result-meta" id="result-meta">
+          Укажите количество труб и/или фасонки
+        </div>
+
+        <div class="share-bars" id="share-bars"></div>
 
         <div class="viz" id="viz" aria-hidden="true">
           <div class="truck" id="truck">
             <div class="truck-cab"></div>
             <div class="truck-bed">
-              <div class="truck-fill" id="truck-fill"></div>
+              <div class="truck-fill truck-fill-pipes" id="truck-fill-pipes"></div>
+              <div class="truck-fill truck-fill-fas" id="truck-fill-fas"></div>
               <div class="pipe-rows" id="pipe-rows"></div>
             </div>
             <div class="truck-wheel truck-wheel-front"></div>
             <div class="truck-wheel truck-wheel-mid"></div>
             <div class="truck-wheel truck-wheel-rear"></div>
           </div>
-          <p class="viz-caption" id="viz-caption">Заполненность фуры по норме</p>
-          <div class="compare" id="length-compare"></div>
+          <p class="viz-caption" id="viz-caption">Заполненность совместной погрузки</p>
+          <div class="legend">
+            <span class="legend-item legend-pipes">Трубы</span>
+            <span class="legend-item legend-fas">Фасонка</span>
+          </div>
         </div>
 
-        <div class="result-trucks is-hidden" id="result-trucks" hidden></div>
+        <div class="result-trucks" id="result-breakdown"></div>
       </section>
 
-      <p class="note" id="note">
-        Нормы по таблицам погрузки. Для фасонки вес считается индивидуально по
-        толщине стенки трубы.
+      <p class="note">
+        Доли загрузки суммируются: трубы и фасонка едут вместе в одних фурах.
+        Для фасонки берётся нижний край нормы; вес — индивидуально по толщине
+        стенки.
       </p>
     </main>
 

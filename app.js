@@ -1,26 +1,26 @@
 (() => {
   const norms = window.LOADING_NORMS;
   const form = document.getElementById("calc-form");
-  const pipeFields = document.getElementById("pipe-fields");
-  const fasFields = document.getElementById("fas-fields");
   const pipeDiameter = document.getElementById("pipe-diameter");
   const pipeLength = document.getElementById("pipe-length");
+  const pipeQty = document.getElementById("pipe-qty");
   const fasSize = document.getElementById("fas-size");
-  const fasType = document.getElementById("fas-type");
-  const quantity = document.getElementById("quantity");
+  const fasBendsQty = document.getElementById("fas-bends-qty");
+  const fasNopQty = document.getElementById("fas-nop-qty");
+  const fasEndQty = document.getElementById("fas-end-qty");
+  const pipeNormLine = document.getElementById("pipe-norm-line");
+  const fasNormLine = document.getElementById("fas-norm-line");
   const result = document.getElementById("result");
-  const resultNorm = document.getElementById("result-norm");
-  const resultLabel = document.getElementById("result-label");
-  const resultUnit = document.getElementById("result-unit");
+  const resultTrucksCount = document.getElementById("result-trucks-count");
   const resultMeta = document.getElementById("result-meta");
-  const resultTrucks = document.getElementById("result-trucks");
-  const truckFill = document.getElementById("truck-fill");
+  const resultBreakdown = document.getElementById("result-breakdown");
+  const shareBars = document.getElementById("share-bars");
+  const truckFillPipes = document.getElementById("truck-fill-pipes");
+  const truckFillFas = document.getElementById("truck-fill-fas");
   const pipeRows = document.getElementById("pipe-rows");
   const vizCaption = document.getElementById("viz-caption");
-  const lengthCompare = document.getElementById("length-compare");
-  const modeButtons = document.querySelectorAll(".mode-btn");
 
-  let mode = "pipes";
+  let syncingFas = false;
 
   function formatRange([min, max]) {
     return min === max ? String(min) : `${min}–${max}`;
@@ -28,6 +28,11 @@
 
   function formatLength(value) {
     return String(value).replace(".", ",");
+  }
+
+  function parseQty(input) {
+    const value = Number(input.value);
+    return Number.isFinite(value) && value > 0 ? value : 0;
   }
 
   function fillSelects() {
@@ -46,40 +51,64 @@
       .join("");
 
     pipeDiameter.value = "225";
+    syncFasToPipeShell();
   }
 
-  function setMode(nextMode) {
-    mode = nextMode;
-    modeButtons.forEach((btn) => {
-      const active = btn.dataset.mode === mode;
-      btn.classList.toggle("is-active", active);
-      btn.setAttribute("aria-selected", String(active));
-    });
-
-    const showPipes = mode === "pipes";
-    pipeFields.hidden = !showPipes;
-    pipeFields.classList.toggle("is-hidden", !showPipes);
-    fasFields.hidden = showPipes;
-    fasFields.classList.toggle("is-hidden", showPipes);
-    calculate();
+  function syncFasToPipeShell() {
+    const shell = Number(pipeDiameter.value);
+    const matchIndex = norms.fas.findIndex((row) => row.shell === shell);
+    if (matchIndex >= 0) {
+      syncingFas = true;
+      fasSize.value = String(matchIndex);
+      syncingFas = false;
+    }
   }
 
-  function trucksNeeded(qty, capacity) {
-    if (!qty || !capacity) return null;
-    return Math.ceil(qty / capacity);
+  function getPipeCapacity() {
+    const diameter = Number(pipeDiameter.value);
+    const length = pipeLength.value;
+    const row = norms.pipes.find((item) => item.diameter === diameter);
+    return {
+      diameter,
+      length,
+      row,
+      capacity: row?.lengths[length] ?? null,
+    };
   }
 
-  function renderTruckViz({ capacity, qty, hasQty, diameterHint }) {
-    const fillRatio = hasQty
-      ? Math.min(1, qty / capacity)
-      : 1;
-    const fillPercent = Math.round(fillRatio * 100);
-    truckFill.style.height = `${fillPercent}%`;
+  function getFasCapacities() {
+    const row = norms.fas[Number(fasSize.value)];
+    if (!row) return null;
+    return {
+      row,
+      bends: row.bends[0],
+      nop: row.nop[0],
+      end: row.end[0],
+      bendsRange: row.bends,
+      nopRange: row.nop,
+      endRange: row.end,
+    };
+  }
+
+  function renderTruckViz(pipeShare, fasShare, trucks, hasCargo) {
+    const totalShare = pipeShare + fasShare;
+    const lastFillRatio = hasCargo && totalShare > 0 ? totalShare % 1 || 1 : 0;
+    const lastFill = Math.round(lastFillRatio * 100);
+
+    const pipeRatio = totalShare > 0 ? pipeShare / totalShare : 0;
+    const fasRatio = totalShare > 0 ? fasShare / totalShare : 0;
+    const lastPipePct = lastFillRatio * pipeRatio * 100;
+    const lastFasPct = lastFillRatio * fasRatio * 100;
+
+    truckFillPipes.style.height = `${lastPipePct}%`;
+    truckFillFas.style.height = `${lastFasPct}%`;
+    truckFillFas.style.bottom = `${lastPipePct}%`;
 
     const rows = 5;
-    const cols = Math.max(4, Math.min(18, Math.round(8 + (diameterHint ? 200 / diameterHint : 8))));
+    const cols = 12;
     const totalDots = rows * cols;
-    const filledDots = Math.round(totalDots * fillRatio);
+    const filled = hasCargo ? Math.round(totalDots * lastFillRatio) : 0;
+    const pipeDots = hasCargo ? Math.round(filled * pipeRatio) : 0;
 
     let html = "";
     let index = 0;
@@ -87,142 +116,155 @@
       html += `<div class="pipe-row">`;
       for (let c = 0; c < cols; c += 1) {
         const delay = Math.min(0.35, index * 0.012);
-        const on = index < filledDots;
-        html += on
-          ? `<span class="pipe-dot" style="animation-delay:${delay}s"></span>`
-          : `<span class="pipe-dot" style="opacity:0.12;transform:scale(1);animation:none;filter:grayscale(1)"></span>`;
+        if (index < pipeDots) {
+          html += `<span class="pipe-dot pipe-dot-pipes" style="animation-delay:${delay}s"></span>`;
+        } else if (index < filled) {
+          html += `<span class="pipe-dot pipe-dot-fas" style="animation-delay:${delay}s"></span>`;
+        } else {
+          html += `<span class="pipe-dot" style="opacity:0.12;transform:scale(1);animation:none;filter:grayscale(1)"></span>`;
+        }
         index += 1;
       }
       html += `</div>`;
     }
     pipeRows.innerHTML = html;
 
-    if (hasQty) {
-      const leftover = qty % capacity;
-      const lastFill = leftover === 0 ? 100 : Math.round((leftover / capacity) * 100);
-      vizCaption.textContent = `Последняя фура заполнена на ${lastFill}% · всего нужно ${trucksNeeded(qty, capacity)}`;
+    if (!hasCargo) {
+      vizCaption.textContent = "Добавьте количество, чтобы увидеть загрузку";
+    } else if (trucks <= 1) {
+      vizCaption.textContent = `Фура заполнена на ${lastFill}%`;
     } else {
-      vizCaption.textContent = `Полная загрузка по норме: ${capacity} шт`;
+      vizCaption.textContent = `Последняя фура заполнена на ${lastFill}% · всего нужно ${trucks}`;
     }
   }
 
-  function renderLengthCompare(row, activeLength) {
-    if (!row) {
-      lengthCompare.classList.add("is-hidden");
-      lengthCompare.innerHTML = "";
-      return;
+  function calculate() {
+    const pipe = getPipeCapacity();
+    const fas = getFasCapacities();
+    const pQty = parseQty(pipeQty);
+    const bQty = parseQty(fasBendsQty);
+    const nQty = parseQty(fasNopQty);
+    const eQty = parseQty(fasEndQty);
+
+    if (pipe.capacity != null) {
+      pipeNormLine.textContent = `Норма: ${pipe.capacity} концов в фуре (Ø ${pipe.diameter}, ${formatLength(pipe.length)} м)`;
+    } else {
+      pipeNormLine.textContent = "Норма: —";
     }
 
-    const entries = [
-      ["1.8", row.lengths["1.8"]],
-      ["2", row.lengths["2"]],
-      ["2.2", row.lengths["2.2"]],
-    ];
-    const max = Math.max(...entries.map(([, value]) => value));
+    if (fas) {
+      fasNormLine.textContent = `Нормы в 1 конец фуры: отводы ${formatRange(fas.bendsRange)}, НОП ${formatRange(fas.nopRange)}, концевой ${formatRange(fas.endRange)}`;
+    } else {
+      fasNormLine.textContent = "Нормы: —";
+    }
 
-    lengthCompare.classList.remove("is-hidden");
-    lengthCompare.innerHTML = entries
-      .map(([length, value]) => {
-        const width = Math.round((value / max) * 100);
-        const active = length === activeLength ? " is-active" : "";
+    const pipeShare = pipe.capacity && pQty ? pQty / pipe.capacity : 0;
+    const bendsShare = fas && bQty ? bQty / fas.bends : 0;
+    const nopShare = fas && nQty ? nQty / fas.nop : 0;
+    const endShare = fas && eQty ? eQty / fas.end : 0;
+    const fasShare = bendsShare + nopShare + endShare;
+    const totalShare = pipeShare + fasShare;
+    const hasCargo = totalShare > 0;
+    const trucks = hasCargo ? Math.ceil(totalShare) : 0;
+
+    resultTrucksCount.textContent = String(trucks);
+
+    if (!hasCargo) {
+      resultMeta.textContent = "Укажите количество труб и/или фасонки";
+    } else if (pipeShare > 0 && fasShare > 0) {
+      resultMeta.textContent = `Трубы ${(pipeShare * 100).toFixed(0)}% фуры · фасонка ${(fasShare * 100).toFixed(0)}% фуры · всего ${(totalShare * 100).toFixed(0)}%`;
+    } else if (pipeShare > 0) {
+      resultMeta.textContent = `Только трубы: ${(pipeShare * 100).toFixed(0)}% от ёмкости фуры`;
+    } else {
+      resultMeta.textContent = `Только фасонка: ${(fasShare * 100).toFixed(0)}% от ёмкости фуры`;
+    }
+
+    const bars = [];
+    if (pQty > 0 && pipe.capacity) {
+      bars.push({
+        label: "Трубы",
+        detail: `${pQty} шт / норма ${pipe.capacity}`,
+        share: pipeShare,
+        cls: "share-pipes",
+      });
+    }
+    if (bQty > 0 && fas) {
+      bars.push({
+        label: "Отводы",
+        detail: `${bQty} шт / норма ${fas.bends}`,
+        share: bendsShare,
+        cls: "share-fas",
+      });
+    }
+    if (nQty > 0 && fas) {
+      bars.push({
+        label: "НОП",
+        detail: `${nQty} шт / норма ${fas.nop}`,
+        share: nopShare,
+        cls: "share-fas",
+      });
+    }
+    if (eQty > 0 && fas) {
+      bars.push({
+        label: "Концевой",
+        detail: `${eQty} шт / норма ${fas.end}`,
+        share: endShare,
+        cls: "share-fas",
+      });
+    }
+
+    const maxShare = Math.max(totalShare, 1);
+    shareBars.innerHTML = bars
+      .map((item) => {
+        const width = Math.min(100, (item.share / maxShare) * 100);
         return `
-          <div class="compare-row${active}">
-            <span>${formatLength(length)} м</span>
-            <div class="compare-track"><div class="compare-bar" style="width:${width}%"></div></div>
-            <span class="compare-val">${value}</span>
+          <div class="share-row">
+            <div class="share-head">
+              <span>${item.label}</span>
+              <span>${(item.share * 100).toFixed(0)}% · ${item.detail}</span>
+            </div>
+            <div class="share-track">
+              <div class="share-bar ${item.cls}" style="width:${width}%"></div>
+            </div>
           </div>`;
       })
       .join("");
 
-    // trigger bar animation
-    requestAnimationFrame(() => {
-      lengthCompare.querySelectorAll(".compare-bar").forEach((bar) => {
-        const width = bar.style.width;
-        bar.style.width = "0%";
-        requestAnimationFrame(() => {
-          bar.style.width = width;
-        });
-      });
-    });
-  }
-
-  function calculate() {
-    const qty = Number(quantity.value);
-    const hasQty = Number.isFinite(qty) && qty > 0;
-
-    let normText = "—";
-    let meta = "";
-    let capacityForTrucks = null;
-    let diameterHint = 200;
-
-    if (mode === "pipes") {
-      const diameter = Number(pipeDiameter.value);
-      const length = pipeLength.value;
-      const row = norms.pipes.find((item) => item.diameter === diameter);
-      const count = row?.lengths[length];
-      diameterHint = diameter;
-
-      if (count != null) {
-        normText = String(count);
-        capacityForTrucks = count;
-        meta = `Диаметр оболочки Ø ${diameter} мм · длина ${formatLength(length)} м`;
-        resultLabel.textContent = "Норма погрузки";
-        resultUnit.textContent = "концов в фуре";
-        renderLengthCompare(row, length);
-      }
-    } else {
-      const row = norms.fas[Number(fasSize.value)];
-      const type = fasType.value;
-      const range = row?.[type];
-      const typeLabel = {
-        bends: "Отводы укор. ПЭ, ОЦ",
-        nop: "НОП (L = 1500 мм)",
-        end: "Концевой элемент (L = 2200 мм)",
-      }[type];
-      diameterHint = row?.shell || 200;
-
-      if (range) {
-        normText = formatRange(range);
-        capacityForTrucks = range[0];
-        meta = `Труба/оболочка Ø ${row.pipe}/${row.shell} мм · ${typeLabel}`;
-        resultLabel.textContent = "Норма в 1 конец фуры";
-        resultUnit.textContent = "шт";
-        lengthCompare.classList.add("is-hidden");
-        lengthCompare.innerHTML = "";
-      }
+    const lines = [];
+    if (pQty > 0 && pipe.capacity) {
+      lines.push(
+        `<div>Трубы: <strong style="font-size:1rem;color:inherit">${pQty} шт</strong> → ${(pipeShare * 100).toFixed(1)}% фуры</div>`
+      );
     }
-
-    resultNorm.textContent = normText;
-    resultMeta.textContent = meta;
-
-    if (capacityForTrucks) {
-      renderTruckViz({
-        capacity: capacityForTrucks,
-        qty,
-        hasQty,
-        diameterHint,
-      });
+    if (bQty > 0 && fas) {
+      lines.push(
+        `<div>Отводы: <strong style="font-size:1rem;color:inherit">${bQty} шт</strong> → ${(bendsShare * 100).toFixed(1)}% фуры</div>`
+      );
     }
-
-    if (hasQty && capacityForTrucks) {
-      const trucks = trucksNeeded(qty, capacityForTrucks);
-      const capacityLabel =
-        mode === "pipes"
-          ? `${capacityForTrucks} концов / фура`
-          : `${capacityForTrucks} шт / конец фуры (по нижнему краю нормы)`;
-
-      resultTrucks.hidden = false;
-      resultTrucks.classList.remove("is-hidden");
-      resultTrucks.innerHTML = `
-        <div>К отгрузке: <strong style="font-size:1rem;color:inherit">${qty} шт</strong></div>
-        <div>Понадобится фур: <strong>${trucks}</strong></div>
-        <div style="color:var(--muted);font-size:0.9rem">Расчёт по норме ${capacityLabel}</div>
-      `;
-    } else {
-      resultTrucks.hidden = true;
-      resultTrucks.classList.add("is-hidden");
-      resultTrucks.innerHTML = "";
+    if (nQty > 0 && fas) {
+      lines.push(
+        `<div>НОП: <strong style="font-size:1rem;color:inherit">${nQty} шт</strong> → ${(nopShare * 100).toFixed(1)}% фуры</div>`
+      );
     }
+    if (eQty > 0 && fas) {
+      lines.push(
+        `<div>Концевой: <strong style="font-size:1rem;color:inherit">${eQty} шт</strong> → ${(endShare * 100).toFixed(1)}% фуры</div>`
+      );
+    }
+    if (hasCargo) {
+      lines.push(
+        `<div>Итого доля загрузки: <strong style="font-size:1rem;color:inherit">${(totalShare * 100).toFixed(1)}%</strong></div>`
+      );
+      lines.push(
+        `<div>Понадобится фур: <strong>${trucks}</strong></div>`
+      );
+      lines.push(
+        `<div style="color:var(--muted);font-size:0.9rem">Формула: ceil(трубы/норма + отводы/норма + НОП/норма + концевой/норма)</div>`
+      );
+    }
+    resultBreakdown.innerHTML = lines.join("");
+
+    renderTruckViz(pipeShare, fasShare, trucks, hasCargo);
 
     result.classList.remove("is-updated");
     void result.offsetWidth;
@@ -286,8 +328,8 @@
     `;
   }
 
-  modeButtons.forEach((btn) => {
-    btn.addEventListener("click", () => setMode(btn.dataset.mode));
+  pipeDiameter.addEventListener("change", () => {
+    if (!syncingFas) syncFasToPipeShell();
   });
 
   form.addEventListener("input", calculate);
