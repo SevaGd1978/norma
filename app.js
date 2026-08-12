@@ -10,6 +10,7 @@
   const quantity = document.getElementById("quantity");
   const result = document.getElementById("result");
   const resultNorm = document.getElementById("result-norm");
+  const resultLabel = document.getElementById("result-label");
   const resultUnit = document.getElementById("result-unit");
   const resultMeta = document.getElementById("result-meta");
   const resultTrucks = document.getElementById("result-trucks");
@@ -83,6 +84,7 @@
         normText = String(count);
         capacityForTrucks = count;
         meta = `Диаметр оболочки Ø ${diameter} мм · длина ${formatLength(length)} м`;
+        resultLabel.textContent = "Норма погрузки";
         resultUnit.textContent = "концов в фуре";
       }
     } else {
@@ -99,7 +101,8 @@
         normText = formatRange(range);
         capacityForTrucks = range[0];
         meta = `Труба/оболочка Ø ${row.pipe}/${row.shell} мм · ${typeLabel}`;
-        resultUnit.textContent = "шт в 1 конец фуры";
+        resultLabel.textContent = "Норма в 1 конец фуры";
+        resultUnit.textContent = "шт";
       }
     }
 
