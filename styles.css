@@ -151,6 +151,16 @@ body {
   grid-template-columns: repeat(3, 1fr);
 }
 
+.fields-2x2 {
+  grid-template-columns: 1fr 1fr;
+}
+
+.table-note {
+  margin: 0 0 0.75rem;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+
 .block > .field {
   margin-bottom: 1rem;
 }
@@ -573,7 +583,8 @@ tbody tr:hover td {
 
 @media (max-width: 640px) {
   .fields,
-  .fields-3 {
+  .fields-3,
+  .fields-2x2 {
     grid-template-columns: 1fr;
   }
 

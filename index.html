@@ -27,18 +27,25 @@
     <main class="calculator">
       <form id="calc-form" class="calc-form" novalidate>
         <section class="block">
-          <h2 class="block-title">Трубы</h2>
-          <div class="fields fields-3">
+          <h2 class="block-title">Трубы ППУ</h2>
+          <div class="fields fields-2x2">
             <label class="field">
-              <span>Диаметр оболочки, мм</span>
-              <select id="pipe-diameter" name="pipe-diameter"></select>
+              <span>Труба / оболочка, мм</span>
+              <select id="pipe-size" name="pipe-size"></select>
             </label>
             <label class="field">
-              <span>Длина трубы</span>
-              <select id="pipe-length" name="pipe-length">
+              <span>Оболочка</span>
+              <select id="pipe-shell-type" name="pipe-shell-type">
+                <option value="pe" selected>ПЭ (полиэтилен)</option>
+                <option value="oc">ОЦ (оцинковка)</option>
+              </select>
+            </label>
+            <label class="field">
+              <span>Коники</span>
+              <select id="pipe-koniki" name="pipe-koniki">
+                <option value="1.2">1,2 м</option>
+                <option value="1.5" selected>1,5 м</option>
                 <option value="1.8">1,8 м</option>
-                <option value="2" selected>2 м</option>
-                <option value="2.2">2,2 м</option>
               </select>
             </label>
             <label class="field">
@@ -327,9 +334,9 @@
       </section>
 
       <p class="note">
-        Доли загрузки суммируются: трубы и фасонка едут вместе в одних фурах.
-        Для фасонки берётся нижний край нормы; вес — индивидуально по толщине
-        стенки.
+        Нормы труб — по открытым таблицам ППУ (ГОСТ 30732), борта 2,3–2,45 м.
+        Доли загрузки труб и фасонки суммируются. Для фасонки берётся нижний
+        край нормы; вес — индивидуально по толщине стенки.
       </p>
     </main>
 
@@ -337,7 +344,8 @@
       <details class="tables">
         <summary>Смотреть исходные таблицы</summary>
         <div class="table-wrap">
-          <h2>Трубы — количество концов</h2>
+          <h2>Трубы ППУ — штук в машину</h2>
+          <p class="table-note" id="source-note"></p>
           <div id="pipe-table"></div>
           <h2>Фасонка — количество в 1 конец фуры</h2>
           <div id="fas-table"></div>

@@ -1,8 +1,9 @@
 (() => {
   const norms = window.LOADING_NORMS;
   const form = document.getElementById("calc-form");
-  const pipeDiameter = document.getElementById("pipe-diameter");
-  const pipeLength = document.getElementById("pipe-length");
+  const pipeSize = document.getElementById("pipe-size");
+  const pipeShellType = document.getElementById("pipe-shell-type");
+  const pipeKoniki = document.getElementById("pipe-koniki");
   const pipeQty = document.getElementById("pipe-qty");
   const fasSize = document.getElementById("fas-size");
   const fasBendsQty = document.getElementById("fas-bends-qty");
@@ -21,6 +22,7 @@
   const fillBadgeText = document.getElementById("fill-badge-text");
   const vizCaption = document.getElementById("viz-caption");
   const viz = document.getElementById("viz");
+  const sourceNote = document.getElementById("source-note");
 
   let syncingFas = false;
 
@@ -37,11 +39,15 @@
     return Number.isFinite(value) && value > 0 ? value : 0;
   }
 
+  function shellLabel(type) {
+    return type === "oc" ? "ОЦ" : "ПЭ";
+  }
+
   function fillSelects() {
-    pipeDiameter.innerHTML = norms.pipes
+    pipeSize.innerHTML = norms.pipes
       .map(
-        (row) =>
-          `<option value="${row.diameter}">Ø ${row.diameter} мм</option>`
+        (row, index) =>
+          `<option value="${index}">Ø ${row.pipe} / ${row.shell} мм</option>`
       )
       .join("");
 
@@ -52,29 +58,41 @@
       )
       .join("");
 
-    pipeDiameter.value = "225";
+    const defaultPipe = norms.pipes.findIndex(
+      (row) => row.pipe === 133 && row.shell === 225
+    );
+    pipeSize.value = String(defaultPipe >= 0 ? defaultPipe : 0);
     syncFasToPipeShell();
   }
 
   function syncFasToPipeShell() {
-    const shell = Number(pipeDiameter.value);
-    const matchIndex = norms.fas.findIndex((row) => row.shell === shell);
-    if (matchIndex >= 0) {
+    const pipeRow = norms.pipes[Number(pipeSize.value)];
+    if (!pipeRow) return;
+    const matchIndex = norms.fas.findIndex(
+      (row) => row.pipe === pipeRow.pipe && row.shell === pipeRow.shell
+    );
+    const fallback = norms.fas.findIndex((row) => row.shell === pipeRow.shell);
+    const index = matchIndex >= 0 ? matchIndex : fallback;
+    if (index >= 0) {
       syncingFas = true;
-      fasSize.value = String(matchIndex);
+      fasSize.value = String(index);
       syncingFas = false;
     }
   }
 
   function getPipeCapacity() {
-    const diameter = Number(pipeDiameter.value);
-    const length = pipeLength.value;
-    const row = norms.pipes.find((item) => item.diameter === diameter);
+    const row = norms.pipes[Number(pipeSize.value)];
+    const koniki = pipeKoniki.value;
+    const shellType = pipeShellType.value;
+    const cell = row?.koniki?.[koniki];
+    const capacity = cell ? cell[shellType] : null;
     return {
-      diameter,
-      length,
       row,
-      capacity: row?.lengths[length] ?? null,
+      pipe: row?.pipe,
+      shell: row?.shell,
+      koniki,
+      shellType,
+      capacity,
     };
   }
 
@@ -160,7 +178,7 @@
     const eQty = parseQty(fasEndQty);
 
     if (pipe.capacity != null) {
-      pipeNormLine.textContent = `Норма: ${pipe.capacity} концов в фуре (Ø ${pipe.diameter}, ${formatLength(pipe.length)} м)`;
+      pipeNormLine.textContent = `Норма: ${pipe.capacity} шт/машина · Ø ${pipe.pipe}/${pipe.shell} · ${shellLabel(pipe.shellType)} · коники ${formatLength(pipe.koniki)} м`;
     } else {
       pipeNormLine.textContent = "Норма: —";
     }
@@ -268,9 +286,7 @@
       lines.push(
         `<div>Итого доля загрузки: <strong style="font-size:1rem;color:inherit">${(totalShare * 100).toFixed(1)}%</strong></div>`
       );
-      lines.push(
-        `<div>Понадобится фур: <strong>${trucks}</strong></div>`
-      );
+      lines.push(`<div>Понадобится фур: <strong>${trucks}</strong></div>`);
       lines.push(
         `<div style="color:var(--muted);font-size:0.9rem">Формула: ceil(трубы/норма + отводы/норма + НОП/норма + концевой/норма)</div>`
       );
@@ -284,18 +300,24 @@
     result.classList.add("is-updated");
   }
 
+  function cellText(cell) {
+    if (cell.pe === cell.oc) return String(cell.pe);
+    return `${cell.pe} ПЭ / ${cell.oc} ОЦ`;
+  }
+
   function renderTables() {
     const pipeTable = document.getElementById("pipe-table");
     const fasTable = document.getElementById("fas-table");
+    if (sourceNote) sourceNote.textContent = norms.source || "";
 
     pipeTable.innerHTML = `
       <table>
         <thead>
           <tr>
-            <th>Диаметр оболочки</th>
-            <th>1,8 м</th>
-            <th>2 м</th>
-            <th>2,2 м</th>
+            <th>Труба / оболочка</th>
+            <th>Коники 1,2 м</th>
+            <th>Коники 1,5 м</th>
+            <th>Коники 1,8 м</th>
           </tr>
         </thead>
         <tbody>
@@ -303,10 +325,10 @@
             .map(
               (row) => `
             <tr>
-              <td>Ø ${row.diameter}</td>
-              <td>${row.lengths["1.8"]}</td>
-              <td>${row.lengths["2"]}</td>
-              <td>${row.lengths["2.2"]}</td>
+              <td>Ø ${row.pipe} / ${row.shell}</td>
+              <td>${cellText(row.koniki["1.2"])}</td>
+              <td>${cellText(row.koniki["1.5"])}</td>
+              <td>${cellText(row.koniki["1.8"])}</td>
             </tr>`
             )
             .join("")}
@@ -341,7 +363,7 @@
     `;
   }
 
-  pipeDiameter.addEventListener("change", () => {
+  pipeSize.addEventListener("change", () => {
     if (!syncingFas) syncFasToPipeShell();
   });
 
