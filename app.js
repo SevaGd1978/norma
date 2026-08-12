@@ -15,10 +15,12 @@
   const resultMeta = document.getElementById("result-meta");
   const resultBreakdown = document.getElementById("result-breakdown");
   const shareBars = document.getElementById("share-bars");
-  const truckFillPipes = document.getElementById("truck-fill-pipes");
-  const truckFillFas = document.getElementById("truck-fill-fas");
-  const pipeRows = document.getElementById("pipe-rows");
+  const cargoLayer = document.getElementById("cargo-layer");
+  const cargoEmpty = document.getElementById("cargo-empty");
+  const fillBadge = document.getElementById("fill-badge");
+  const fillBadgeText = document.getElementById("fill-badge-text");
   const vizCaption = document.getElementById("viz-caption");
+  const viz = document.getElementById("viz");
 
   let syncingFas = false;
 
@@ -94,40 +96,51 @@
     const totalShare = pipeShare + fasShare;
     const lastFillRatio = hasCargo && totalShare > 0 ? totalShare % 1 || 1 : 0;
     const lastFill = Math.round(lastFillRatio * 100);
-
     const pipeRatio = totalShare > 0 ? pipeShare / totalShare : 0;
-    const fasRatio = totalShare > 0 ? fasShare / totalShare : 0;
-    const lastPipePct = lastFillRatio * pipeRatio * 100;
-    const lastFasPct = lastFillRatio * fasRatio * 100;
 
-    truckFillPipes.style.height = `${lastPipePct}%`;
-    truckFillFas.style.height = `${lastFasPct}%`;
-    truckFillFas.style.bottom = `${lastPipePct}%`;
-
-    const rows = 5;
-    const cols = 12;
-    const totalDots = rows * cols;
-    const filled = hasCargo ? Math.round(totalDots * lastFillRatio) : 0;
-    const pipeDots = hasCargo ? Math.round(filled * pipeRatio) : 0;
+    const originX = 222;
+    const originY = 188;
+    const bayWidth = 336;
+    const bayHeight = 104;
+    const radius = 11;
+    const gap = 3;
+    const step = radius * 2 + gap;
+    const cols = Math.floor(bayWidth / step);
+    const rows = Math.floor(bayHeight / step);
+    const totalSlots = cols * rows;
+    const filledSlots = hasCargo ? Math.round(totalSlots * lastFillRatio) : 0;
+    const pipeSlots = hasCargo ? Math.round(filledSlots * pipeRatio) : 0;
 
     let html = "";
     let index = 0;
     for (let r = 0; r < rows; r += 1) {
-      html += `<div class="pipe-row">`;
       for (let c = 0; c < cols; c += 1) {
-        const delay = Math.min(0.35, index * 0.012);
-        if (index < pipeDots) {
-          html += `<span class="pipe-dot pipe-dot-pipes" style="animation-delay:${delay}s"></span>`;
-        } else if (index < filled) {
-          html += `<span class="pipe-dot pipe-dot-fas" style="animation-delay:${delay}s"></span>`;
-        } else {
-          html += `<span class="pipe-dot" style="opacity:0.12;transform:scale(1);animation:none;filter:grayscale(1)"></span>`;
+        if (index >= filledSlots) {
+          index += 1;
+          continue;
         }
+        const cx = originX + radius + c * step;
+        const cy = originY - radius - r * step;
+        const kind = index < pipeSlots ? "pipes" : "fas";
+        const fill = kind === "pipes" ? "url(#pipeMetal)" : "url(#fasMetal)";
+        const delay = Math.min(0.45, index * 0.012);
+        html += `
+          <g class="cargo-pipe cargo-pipe-${kind}" style="animation-delay:${delay}s">
+            <circle cx="${cx}" cy="${cy}" r="${radius}" fill="${fill}" opacity="0.95" />
+            <circle cx="${cx - 3}" cy="${cy - 3}" r="${radius * 0.35}" fill="#ffffff" opacity="0.35" />
+            <circle cx="${cx}" cy="${cy}" r="${radius * 0.42}" fill="rgba(28,36,48,0.18)" />
+            <circle cx="${cx}" cy="${cy}" r="${radius * 0.22}" fill="rgba(255,255,255,0.15)" />
+          </g>`;
         index += 1;
       }
-      html += `</div>`;
     }
-    pipeRows.innerHTML = html;
+
+    cargoLayer.innerHTML = html;
+    cargoEmpty.style.display = hasCargo ? "none" : "block";
+    fillBadge.setAttribute("opacity", hasCargo ? "1" : "0");
+    fillBadgeText.textContent = `${lastFill}%`;
+    viz.classList.toggle("is-loaded", hasCargo);
+    viz.classList.toggle("is-mixed", pipeShare > 0 && fasShare > 0);
 
     if (!hasCargo) {
       vizCaption.textContent = "Добавьте количество, чтобы увидеть загрузку";

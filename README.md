@@ -7,7 +7,7 @@
 
 ## Онлайн
 
-**Сайт:** https://shiny-nougat-35bc00.netlify.app  
+**Сайт:** https://neon-praline-c6fc92.netlify.app  
 **Пароль:** `My-Drop-Site`
 
 Чтобы убрать пароль и закрепить сайт навсегда — claim в Netlify (ссылка в PR, действует ~1 час после деплоя).

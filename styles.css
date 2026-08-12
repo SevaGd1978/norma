@@ -40,9 +40,10 @@ body {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(900px 480px at 12% -10%, rgba(47, 111, 122, 0.22), transparent 60%),
-    radial-gradient(700px 420px at 100% 8%, rgba(196, 92, 38, 0.16), transparent 55%),
-    linear-gradient(165deg, #eef3f5 0%, #f7f4ef 48%, #e8eef1 100%);
+    radial-gradient(900px 520px at 8% -8%, rgba(120, 190, 210, 0.35), transparent 58%),
+    radial-gradient(760px 480px at 100% 0%, rgba(255, 186, 140, 0.28), transparent 55%),
+    radial-gradient(700px 420px at 50% 100%, rgba(180, 200, 220, 0.35), transparent 60%),
+    linear-gradient(165deg, #eef4f7 0%, #f5f7f9 45%, #e8eef3 100%);
   animation: drift 16s ease-in-out infinite alternate;
 }
 
@@ -116,9 +117,13 @@ body {
 
 .block {
   padding: 1rem 1.05rem 1.05rem;
-  border: 1px solid var(--line);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 22px;
+  background:
+    linear-gradient(160deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.28));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.7) inset;
+  backdrop-filter: blur(14px) saturate(1.25);
+  -webkit-backdrop-filter: blur(14px) saturate(1.25);
 }
 
 .block-title {
@@ -165,16 +170,18 @@ select,
 input[type="number"] {
   width: 100%;
   appearance: none;
-  border: 1px solid var(--line);
-  background: var(--panel);
-  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  background: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
   color: var(--ink);
   font: inherit;
   font-weight: 600;
   font-size: 1.05rem;
   padding: 0.95rem 1rem;
-  border-radius: 14px;
+  border-radius: 16px;
   outline: none;
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.65) inset;
   transition: border-color 0.2s ease, box-shadow 0.2s ease, background 0.2s ease;
 }
 
@@ -200,12 +207,16 @@ input[type="number"]:focus {
 .result {
   margin-top: 1.5rem;
   padding: 1.5rem 1.35rem 1.35rem;
-  border-radius: var(--radius);
+  border-radius: 28px;
   background:
-    linear-gradient(145deg, rgba(47, 111, 122, 0.12), rgba(255, 255, 255, 0.7) 55%),
-    #fff;
-  border: 1px solid var(--line);
-  box-shadow: var(--shadow);
+    linear-gradient(155deg, rgba(255, 255, 255, 0.72), rgba(255, 255, 255, 0.38) 48%, rgba(220, 236, 240, 0.4)),
+    rgba(255, 255, 255, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.75) inset,
+    0 18px 48px rgba(28, 36, 48, 0.12);
+  backdrop-filter: blur(22px) saturate(1.35);
+  -webkit-backdrop-filter: blur(22px) saturate(1.35);
   min-height: 180px;
   transition: transform 0.35s ease, background 0.35s ease;
 }
@@ -259,135 +270,84 @@ input[type="number"]:focus {
 
 .viz {
   margin-top: 1.25rem;
-  padding-top: 1.15rem;
-  border-top: 1px solid var(--line);
-}
-
-.truck {
-  position: relative;
-  display: grid;
-  grid-template-columns: 72px 1fr;
-  gap: 6px;
-  align-items: end;
-  min-height: 110px;
-  padding-bottom: 18px;
-}
-
-.truck-cab {
-  height: 58px;
-  border-radius: 14px 8px 6px 6px;
+  padding: 1rem 0.85rem 1.05rem;
+  border-top: 0;
+  border-radius: 24px;
   background:
-    linear-gradient(160deg, #31424f 0%, #1c2430 70%),
-    var(--ink);
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55), rgba(255, 255, 255, 0.22)),
+    rgba(236, 243, 246, 0.55);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 12px 28px rgba(28, 36, 48, 0.08);
+  backdrop-filter: blur(18px) saturate(1.4);
+  -webkit-backdrop-filter: blur(18px) saturate(1.4);
+}
+
+.viz-stage {
   position: relative;
-}
-
-.truck-cab::before {
-  content: "";
-  position: absolute;
-  inset: 10px 10px 18px 14px;
-  border-radius: 8px 4px 2px 2px;
-  background: linear-gradient(180deg, #9fd0da, #5a9aa5);
-  opacity: 0.9;
-}
-
-.truck-bed {
-  position: relative;
-  height: 84px;
-  border-radius: 10px;
-  border: 2px solid #2a3542;
-  background:
-    repeating-linear-gradient(
-      90deg,
-      rgba(28, 36, 48, 0.04) 0 10px,
-      transparent 10px 20px
-    ),
-    #eef3f5;
   overflow: hidden;
+  border-radius: 18px;
 }
 
-.truck-fill {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  height: 0%;
-  transition: height 0.55s cubic-bezier(0.22, 1, 0.36, 1), bottom 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+.truck-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  max-height: 280px;
 }
 
-.truck-fill-pipes {
-  background: linear-gradient(180deg, rgba(47, 111, 122, 0.55), rgba(31, 84, 92, 0.8));
-  z-index: 0;
+.cargo-empty-text {
+  fill: #6a7785;
+  font-family: var(--font-body);
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
 }
 
-.truck-fill-fas {
-  background: linear-gradient(180deg, rgba(196, 92, 38, 0.55), rgba(154, 63, 20, 0.75));
-  z-index: 0;
+.fill-badge {
+  transition: opacity 0.35s ease;
 }
 
-.pipe-rows {
-  position: absolute;
-  inset: 8px;
-  display: grid;
-  align-content: end;
-  gap: 5px;
-  z-index: 1;
+.fill-badge-text {
+  fill: #1c2430;
+  font-family: var(--font-display);
+  font-size: 16px;
+  font-weight: 700;
 }
 
-.pipe-row {
-  display: flex;
-  gap: 4px;
-  justify-content: flex-start;
-  flex-wrap: nowrap;
-  overflow: hidden;
-}
-
-.pipe-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 30% 30%, #f0d7b8, #b88955 55%, #7a5630);
-  box-shadow: inset 0 0 0 1px rgba(28, 36, 48, 0.18);
-  transform: scale(0.6);
+.cargo-pipe {
+  transform-origin: center;
+  transform-box: fill-box;
   opacity: 0;
-  animation: pipe-in 0.35s ease forwards;
+  animation: cargo-pop 0.45s cubic-bezier(0.22, 1, 0.36, 1) forwards;
 }
 
-.pipe-dot-pipes {
-  background: radial-gradient(circle at 30% 30%, #cfe8ec, #4f8f99 55%, #2a5f68);
-}
-
-.pipe-dot-fas {
-  background: radial-gradient(circle at 30% 30%, #f0d7b8, #b88955 55%, #7a5630);
-}
-
-@keyframes pipe-in {
+@keyframes cargo-pop {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.72);
+  }
   to {
-    transform: scale(1);
     opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
 
-.truck-wheel {
-  position: absolute;
-  bottom: 0;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #6b7684, #1c2430 60%);
-  border: 2px solid #0f141a;
+.viz.is-loaded .truck-svg {
+  animation: truck-settle 0.7s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.truck-wheel-front {
-  left: 28px;
-}
-
-.truck-wheel-mid {
-  right: 58px;
-}
-
-.truck-wheel-rear {
-  right: 28px;
+@keyframes truck-settle {
+  0% {
+    transform: translateY(6px);
+  }
+  60% {
+    transform: translateY(-2px);
+  }
+  100% {
+    transform: translateY(0);
+  }
 }
 
 .viz-caption {
