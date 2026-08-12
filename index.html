@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="ru">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Погрузка — калькулятор норм</title>
+    <meta
+      name="description"
+      content="Калькулятор норм погрузки труб и фасонки в фуру"
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700&family=Syne:wght@700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="atmosphere" aria-hidden="true"></div>
+
+    <header class="site-header">
+      <p class="brand">Погрузка</p>
+      <p class="tagline">Нормы загрузки фуры для труб и фасонки</p>
+    </header>
+
+    <main class="calculator">
+      <div class="mode-switch" role="tablist" aria-label="Тип изделий">
+        <button
+          type="button"
+          class="mode-btn is-active"
+          role="tab"
+          aria-selected="true"
+          data-mode="pipes"
+        >
+          Трубы
+        </button>
+        <button
+          type="button"
+          class="mode-btn"
+          role="tab"
+          aria-selected="false"
+          data-mode="fas"
+        >
+          Фасонка
+        </button>
+      </div>
+
+      <form id="calc-form" class="calc-form" novalidate>
+        <section class="fields" id="pipe-fields">
+          <label class="field">
+            <span>Диаметр оболочки, мм</span>
+            <select id="pipe-diameter" name="pipe-diameter"></select>
+          </label>
+          <label class="field">
+            <span>Длина трубы</span>
+            <select id="pipe-length" name="pipe-length">
+              <option value="1.8">1,8 м</option>
+              <option value="2" selected>2 м</option>
+              <option value="2.2">2,2 м</option>
+            </select>
+          </label>
+        </section>
+
+        <section class="fields is-hidden" id="fas-fields" hidden>
+          <label class="field">
+            <span>Диаметр трубы / оболочки</span>
+            <select id="fas-size" name="fas-size"></select>
+          </label>
+          <label class="field">
+            <span>Тип изделия</span>
+            <select id="fas-type" name="fas-type">
+              <option value="bends">Отводы укор. ПЭ, ОЦ</option>
+              <option value="nop">НОП (L = 1500 мм)</option>
+              <option value="end">Концевой элемент (L = 2200 мм)</option>
+            </select>
+          </label>
+        </section>
+
+        <label class="field field-qty">
+          <span>Количество к отгрузке, шт</span>
+          <input
+            id="quantity"
+            name="quantity"
+            type="number"
+            min="1"
+            step="1"
+            placeholder="Необязательно"
+            inputmode="numeric"
+          />
+        </label>
+      </form>
+
+      <section class="result" id="result" aria-live="polite">
+        <p class="result-label">Норма в 1 конец фуры</p>
+        <p class="result-value" id="result-norm">—</p>
+        <p class="result-unit" id="result-unit">шт</p>
+        <div class="result-meta" id="result-meta"></div>
+        <div class="result-trucks is-hidden" id="result-trucks" hidden></div>
+      </section>
+
+      <p class="note" id="note">
+        Нормы по таблицам погрузки. Для фасонки вес считается индивидуально по
+        толщине стенки трубы.
+      </p>
+    </main>
+
+    <footer class="site-footer">
+      <details class="tables">
+        <summary>Смотреть исходные таблицы</summary>
+        <div class="table-wrap">
+          <h2>Трубы — количество концов</h2>
+          <div id="pipe-table"></div>
+          <h2>Фасонка — количество в 1 конец фуры</h2>
+          <div id="fas-table"></div>
+        </div>
+      </details>
+    </footer>
+
+    <script src="data.js"></script>
+    <script src="app.js"></script>
+  </body>
+</html>
