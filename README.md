@@ -10,7 +10,7 @@
 
 ## Онлайн
 
-**Сайт:** https://graceful-begonia-f2d674.netlify.app  
+**Сайт:** https://steady-queijadas-c8490b.netlify.app  
 **Пароль:** `My-Drop-Site`
 
 Чтобы убрать пароль и закрепить сайт навсегда — claim в Netlify (ссылка в PR, действует ~1 час после деплоя).
